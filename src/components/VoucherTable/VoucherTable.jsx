@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import './VoucherTable.css'
+import columnIcon from '../../assets/ic_icon_column.png'
 
 const vouchersData = [
   { id: 1, name: 'Birthday Gift', type: 'Gift', amount: '£50', code: 'fhf56w7r8', expiry: 'Feb 23, 2025', assignTo: 'Marcus Septimus', status: true },
@@ -16,10 +17,23 @@ const vouchersData = [
   { id: 12, name: 'Birthday Gift', type: 'Service', amount: '£50', code: 'fhf56w7r8', expiry: 'Feb 23, 2025', assignTo: 'Cooper Stanton', status: true },
 ]
 
+const initialColumns = [
+  { id: 'name', label: 'Voucher Name', key: 'name', draggable: true },
+  { id: 'type', label: 'Type', key: 'type', draggable: true },
+  { id: 'amount', label: 'Amount', key: 'amount', draggable: true },
+  { id: 'code', label: 'Voucher Code', key: 'code', draggable: true },
+  { id: 'expiry', label: 'Expiry Date', key: 'expiry', draggable: true },
+  { id: 'assign', label: 'Assign To', key: 'assignTo', draggable: true },
+  { id: 'status', label: 'Status', key: 'status', draggable: false },
+]
+
 function VoucherTable() {
   const [vouchers, setVouchers] = useState(vouchersData)
+  const [columns, setColumns] = useState(initialColumns)
   const [selectedColumn, setSelectedColumn] = useState('name')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [draggedColumn, setDraggedColumn] = useState(null)
+  const [dragOverColumn, setDragOverColumn] = useState(null)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -52,42 +66,94 @@ function VoucherTable() {
     setOpenMenuId(null)
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (e, column) => {
+    if (!column.draggable) {
+      e.preventDefault()
+      return
+    }
+    setDraggedColumn(column.id)
+    setSelectedColumn(column.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e, column) => {
+    e.preventDefault()
+    if (!column.draggable) return
+    if (draggedColumn && draggedColumn !== column.id) {
+      setDragOverColumn(column.id)
+    }
+  }
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null)
+  }
+
+  const handleDrop = (e, targetColumn) => {
+    e.preventDefault()
+    if (!targetColumn.draggable || !draggedColumn || draggedColumn === targetColumn.id) {
+      setDraggedColumn(null)
+      setDragOverColumn(null)
+      return
+    }
+
+    const newColumns = [...columns]
+    const draggedIndex = newColumns.findIndex(col => col.id === draggedColumn)
+    const targetIndex = newColumns.findIndex(col => col.id === targetColumn.id)
+
+    const [removed] = newColumns.splice(draggedIndex, 1)
+    newColumns.splice(targetIndex, 0, removed)
+
+    setColumns(newColumns)
+    setDraggedColumn(null)
+    setDragOverColumn(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedColumn(null)
+    setDragOverColumn(null)
+  }
+
+  const renderCellContent = (voucher, column) => {
+    if (column.key === 'status') {
+      return (
+        <label className="toggle">
+          <input 
+            type="checkbox" 
+            checked={voucher.status}
+            onChange={() => handleToggle(voucher.id)}
+          />
+          <span className="toggle-slider"></span>
+        </label>
+      )
+    }
+    return voucher[column.key]
+  }
+
   return (
     <div className="voucher-table-container">
       <table className="voucher-table">
         <thead>
           <tr>
-            <th className={`col-checkbox ${selectedColumn === 'name' ? 'selected-start' : ''}`}>
-              <input type="checkbox" />
+            <th className={`col-checkbox ${selectedColumn === columns[0]?.id ? 'selected-start' : ''}`}>
+              <img src={columnIcon} alt="Column" className="column-icon" />
             </th>
-            <th className={`col-name ${selectedColumn === 'name' ? 'selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Voucher Name
-            </th>
-            <th className={`col-type ${selectedColumn === 'type' ? 'selected-start selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Type
-            </th>
-            <th className={`col-amount ${selectedColumn === 'amount' ? 'selected-start selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Amount
-            </th>
-            <th className={`col-code ${selectedColumn === 'code' ? 'selected-start selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Voucher Code
-            </th>
-            <th className={`col-expiry ${selectedColumn === 'expiry' ? 'selected-start selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Expiry Date
-            </th>
-            <th className={`col-assign ${selectedColumn === 'assign' ? 'selected-start selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Assign To
-            </th>
-            <th className={`col-status ${selectedColumn === 'status' ? 'selected-start selected-end' : ''}`}>
-              <span className="col-divider">⋮</span>
-              Status
-            </th>
+            {columns.map((column, index) => (
+              <th
+                key={column.id}
+                className={`col-${column.id} ${selectedColumn === column.id ? (index === 0 ? 'selected-end' : 'selected-start selected-end') : ''} ${draggedColumn === column.id ? 'dragging' : ''} ${dragOverColumn === column.id ? 'drag-over' : ''} ${!column.draggable ? 'no-drag' : ''}`}
+                draggable={column.draggable}
+                onDragStart={(e) => handleDragStart(e, column)}
+                onDragOver={(e) => handleDragOver(e, column)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, column)}
+                onDragEnd={handleDragEnd}
+              >
+                <span className="col-divider">⋮</span>
+                {column.label}
+                {column.draggable && <span className="drag-handle">⠿</span>}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -113,22 +179,11 @@ function VoucherTable() {
                   )}
                 </div>
               </td>
-              <td className="col-name">{voucher.name}</td>
-              <td className="col-type">{voucher.type}</td>
-              <td className="col-amount">{voucher.amount}</td>
-              <td className="col-code">{voucher.code}</td>
-              <td className="col-expiry">{voucher.expiry}</td>
-              <td className="col-assign">{voucher.assignTo}</td>
-              <td className="col-status">
-                <label className="toggle">
-                  <input 
-                    type="checkbox" 
-                    checked={voucher.status}
-                    onChange={() => handleToggle(voucher.id)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </td>
+              {columns.map((column) => (
+                <td key={column.id} className={`col-${column.id}`}>
+                  {renderCellContent(voucher, column)}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

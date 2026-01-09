@@ -26,6 +26,44 @@
   color: #666;
   position: relative;
   white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+}
+
+.voucher-table th:active {
+  cursor: grabbing;
+}
+
+/* Drag handle */
+.drag-handle {
+  color: #ccc;
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.voucher-table th:hover .drag-handle {
+  opacity: 1;
+}
+
+/* Dragging styles */
+.voucher-table th.dragging {
+  opacity: 0.5;
+  background-color: #e8e8e8;
+}
+
+.voucher-table th.drag-over {
+  border-left: 3px solid #e30613 !important;
+}
+
+/* Non-draggable column */
+.voucher-table th.no-drag {
+  cursor: default;
+}
+
+.voucher-table th.no-drag:active {
+  cursor: default;
 }
 
 /* Selected column red bar */
@@ -81,6 +119,12 @@
   width: 36px;
   text-align: center;
   padding: 8px 6px;
+}
+
+.column-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .col-name { min-width: 120px; border-left: 1px solid #F6F6F6; }
@@ -230,5 +274,93 @@
   .voucher-table th,
   .voucher-table td {
     padding: 10px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .voucher-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .voucher-table {
+    font-size: 11px;
+    min-width: 700px;
+  }
+
+  .voucher-table th,
+  .voucher-table td {
+    padding: 8px 10px;
+  }
+
+  .col-name { min-width: 100px; }
+  .col-type { min-width: 60px; }
+  .col-amount { min-width: 60px; }
+  .col-code { min-width: 90px; }
+  .col-expiry { min-width: 80px; }
+  .col-assign { min-width: 120px; }
+  .col-status { min-width: 60px; }
+
+  .col-checkbox,
+  .col-menu {
+    width: 32px;
+    padding: 8px 4px;
+  }
+
+  .toggle {
+    width: 32px;
+    height: 18px;
+  }
+
+  .toggle-slider:before {
+    height: 14px;
+    width: 14px;
+  }
+
+  .toggle input:checked + .toggle-slider:before {
+    transform: translateX(14px);
+  }
+
+  .drag-handle {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .voucher-table {
+    font-size: 10px;
+    min-width: 600px;
+  }
+
+  .voucher-table th,
+  .voucher-table td {
+    padding: 6px 8px;
+  }
+
+  .col-divider {
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  .col-name { min-width: 80px; }
+  .col-type { min-width: 50px; }
+  .col-amount { min-width: 50px; }
+  .col-code { min-width: 70px; }
+  .col-expiry { min-width: 70px; }
+  .col-assign { min-width: 100px; }
+  .col-status { min-width: 50px; }
+
+  .menu-btn {
+    padding: 2px 4px;
+    font-size: 14px;
+  }
+
+  .dropdown-menu {
+    min-width: 90px;
+  }
+
+  .dropdown-menu button {
+    padding: 8px 10px;
+    font-size: 11px;
   }
 }
